@@ -15,7 +15,7 @@ Welcome to the Whitelist Manager plugin! This tool allows you to easily manage a
 
 1. Make sure you have Oxide installed on your Rust server.
 2. Download the latest release of the Whitelist Manager plugin from the [Releases](https://umod.org/plugins/wmgDoDQK2Z) page.
-3. Place the downloaded .dll file into your server's `oxide/plugins` folder.
+3. Place the downloaded .cs file into your server's `oxide/plugins` folder.
 4. Configure the plugin as needed by editing the `config/WhitelistManager.json` file.
 
 ## Usage
