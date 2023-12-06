@@ -47,7 +47,3 @@ If you encounter any issues or have questions, please open an issue on the [GitH
 
 This plugin is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
----
-
-**Note:** Replace `Cobrakiller456` in the links with your GitHub username or organization name when you create your repository.
-
