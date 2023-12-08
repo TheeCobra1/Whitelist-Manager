@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Oxide.Core;
@@ -6,94 +5,29 @@ using Oxide.Core.Libraries.Covalence;
 
 namespace Oxide.Plugins
 {
-    [Info("Whitelist Manager", "Cobra", "1.8.0")]
+    [Info("Whitelist Manager", "Cobra", "2.0.0")]
     [Description("Manage a dynamic whitelist for your Rust server.")]
     class WhitelistManager : CovalencePlugin
     {
         private HashSet<string> whitelist = new HashSet<string>();
-        private ConfigData configData;
 
         void Init()
         {
             permission.RegisterPermission("whitelistmanager.admin", this);
             permission.RegisterPermission("whitelistmanager.bypass", this);
 
-            LoadDefaultMessages();
-            LoadConfig();
-
-            if (configData == null)
-            {
-                PrintError("Config file is not valid JSON or is missing. Creating a new one with default values.");
-                configData = new ConfigData();
-                SaveConfig();
-            }
-
             LoadWhitelistData();
         }
 
-        protected override void LoadDefaultMessages()
+        bool IsWhitelisted(string playerId)
         {
-            lang.RegisterMessages(new Dictionary<string, string>
-            {
-                ["NotWhitelisted"] = "You are not whitelisted on this server. Visit our website to apply for whitelist access.",
-                ["AlreadyWhitelisted"] = "{player} is already whitelisted.",
-                ["AddedToWhitelist"] = "{player} has been added to the whitelist.",
-                ["RemovedFromWhitelist"] = "{player} has been removed from the whitelist.",
-                ["AdminApproval"] = "You have been approved to join the whitelist.",
-                ["NoPermission"] = "You do not have permission to use this command.",
-                ["PlayerNotFound"] = "Player not found on the whitelist.",
-                ["ListWhitelisted"] = "Whitelisted players: {players}"
-            }, this);
-        }
-
-        protected override void LoadConfig()
-        {
-            base.LoadConfig();
-
-            try
-            {
-                configData = Config.ReadObject<ConfigData>();
-            }
-            catch (Newtonsoft.Json.JsonException jsonException)
-            {
-                PrintWarning($"Failed to parse configuration file: {jsonException.Message}");
-                LoadDefaultConfig();
-            }
-            catch (Exception ex)
-            {
-                PrintError($"An error occurred while loading the configuration: {ex.Message}");
-                LoadDefaultConfig();
-            }
-        }
-
-        protected override void LoadDefaultConfig()
-        {
-            configData = new ConfigData();
-            SaveConfig();
-        }
-
-        void SaveConfig()
-        {
-            Config.WriteObject(configData);
-        }
-
-        void OnUserApprove(IPlayer player)
-        {
-            // Player approved for whitelist, add them to the whitelist and grant bypass permission
-            whitelist.Add(player.Id);
-            SaveWhitelistData();
-            permission.GrantUserPermission(player.Id, "whitelistmanager.bypass", this);
-
-            // Notify the player about the approval
-            player.Reply(GetMessage("AdminApproval", player));
+            return whitelist.Contains(playerId);
         }
 
         void OnUserConnected(IPlayer player)
         {
-            if (!whitelist.Contains(player.Id))
+            if (!IsWhitelisted(player.Id))
             {
-                // Player is not whitelisted, kick them and send the not whitelisted message
-                player.Reply(GetMessage("NotWhitelisted", player));
                 player.Kick(GetMessage("NotWhitelisted", player));
             }
         }
@@ -108,12 +42,6 @@ namespace Oxide.Plugins
             }
 
             var action = args[0].ToLower();
-
-            if (action == "add" && !player.HasPermission("whitelistmanager.admin"))
-            {
-                player.Reply(GetMessage("NoPermission", player));
-                return;
-            }
 
             switch (action)
             {
@@ -188,7 +116,7 @@ namespace Oxide.Plugins
             if (!HasPermissionOrNotify(player, "whitelistmanager.admin"))
                 return;
 
-            var whitelistedPlayers = string.Join(", ", whitelist.ToArray());
+            var whitelistedPlayers = string.Join(", ", whitelist);
             player.Reply(GetMessage("ListWhitelisted", player).Replace("{players}", whitelistedPlayers));
         }
 
@@ -213,32 +141,36 @@ namespace Oxide.Plugins
 
         void SaveWhitelistData()
         {
-            configData.WhitelistedPlayers = whitelist.ToList();
-            SaveConfig();
+            Interface.Oxide.DataFileSystem.WriteObject("WhitelistManager", whitelist.ToList());
         }
 
         void LoadWhitelistData()
         {
-            var whitelistData = Config.ReadObject<ConfigData>();
+            var whitelistData = Interface.Oxide.DataFileSystem.ReadObject<List<string>>("WhitelistManager");
             if (whitelistData != null)
             {
-                whitelist = new HashSet<string>(whitelistData.WhitelistedPlayers);
+                whitelist = new HashSet<string>(whitelistData);
             }
         }
-
-        #region Configuration
-
-        private class ConfigData
-        {
-            public List<string> WhitelistedPlayers { get; set; } = new List<string>();
-        }
-
-        #endregion
 
         #region Localization
 
         private string GetMessage(string key, IPlayer player = null) =>
             lang.GetMessage(key, this, player?.Id);
+
+        protected override void LoadDefaultMessages()
+        {
+            lang.RegisterMessages(new Dictionary<string, string>
+            {
+                ["NotWhitelisted"] = "You are not whitelisted on this server.",
+                ["AlreadyWhitelisted"] = "{player} is already whitelisted.",
+                ["AddedToWhitelist"] = "{player} has been added to the whitelist.",
+                ["RemovedFromWhitelist"] = "{player} has been removed from the whitelist.",
+                ["NoPermission"] = "You do not have permission to use this command.",
+                ["PlayerNotFound"] = "Player not found on the whitelist.",
+                ["ListWhitelisted"] = "Whitelisted players: {players}"
+            }, this);
+        }
 
         #endregion
     }
