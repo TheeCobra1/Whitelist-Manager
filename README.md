@@ -45,5 +45,5 @@ If you encounter any issues or have questions, please open an issue on the [GitH
 
 ## License
 
-This plugin is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+This plugin is licensed under the MIT License. See the [LICENSE]([LICENSE](https://github.com/Cobrakiller456/Whitelist-Manager/blob/main/LICENSE)https://github.com/Cobrakiller456/Whitelist-Manager/blob/main/LICENSE) file for details.
 
