@@ -2,48 +2,44 @@
 
 ## Overview
 
-Welcome to the Whitelist Manager plugin! This tool allows you to easily manage a dynamic whitelist for your Rust server, keeping your server exclusive and secure by controlling who has access.
+Welcome to the Whitelist Manager plugin! This tool enables easy management of a dynamic whitelist for your Rust server. Maintain exclusivity and security by controlling who can access your server.
 
 ## Features
 
-- Add and remove players from the whitelist.
-- List all whitelisted players.
-- Grant `whitelistmanager.bypass` permission to whitelisted players.
-- Kick non-whitelisted players upon joining the server.
+- **Dynamic Whitelisting:** Add and remove players from the whitelist effortlessly.
+- **Automatic Kicking:** Non-whitelisted players are automatically kicked upon joining.
+- **Whitelist Searching:** Search functionality to find players in the whitelist.
+- **Paginated Player Listing:** View all whitelisted players in a user-friendly paginated format.
+- **Permission Management:** Automatically grant or revoke `whitelistmanager.bypass` to whitelisted players.
+- **Enhanced User Messages:** Color-coded and clearer user messages for better interaction.
 
 ## Installation
 
-1. Make sure you have Oxide installed on your Rust server.
+1. Ensure Oxide is installed on your Rust server.
 2. Download the latest release of the Whitelist Manager plugin from the [Releases](https://umod.org/plugins/wmgDoDQK2Z) page.
-3. Place the downloaded .cs file into your server's `oxide/plugins` folder.
-4. Configure the plugin as needed by editing the `config/WhitelistManager.json` file.
+3. Place the `.cs` file in your server's `oxide/plugins` directory.
+4. Optionally, configure the plugin by editing `config/WhitelistManager.json`.
 
 ## Usage
 
 ### Commands
 
-This plugin provides chat and console commands using the same syntax. When using a command in chat, prefix it with a forward slash `/`.
+Use these commands in chat (with a `/` prefix) or in the server console:
 
-- `/whitelist add <player>`: Add a player to the whitelist. (Requires `whitelistmanager.admin` permission)
-- `/whitelist remove <player>`: Remove a player from the whitelist. (Requires `whitelistmanager.admin` permission)
-- `/whitelist list`: List all whitelisted players.
+- `/whitelist add <player>`: Add a player to the whitelist. Requires `whitelistmanager.admin`.
+- `/whitelist remove <player>`: Remove a player from the whitelist. Requires `whitelistmanager.admin`.
+- `/whitelist list [page]`: List all whitelisted players, with optional pagination.
+- `/whitelist search <player>`: Search for a player in the whitelist.
 
 ### Permissions
 
-This plugin uses the permission system:
-
-- `whitelistmanager.admin`: Allows access to administrative commands for managing the whitelist.
-- `whitelistmanager.bypass`: Granted to whitelisted players, allowing them to join without being affected by other plugins' restrictions.
-
-## Configuration
-
-You can configure the plugin by editing the `config/WhitelistManager.json` file. Adjust settings to your preferences.
+- `whitelistmanager.admin`: Access to whitelist management commands.
+- `whitelistmanager.bypass`: Granted to whitelisted players to bypass restrictions.
 
 ## Support and Issues
 
-If you encounter any issues or have questions, please open an issue on the [GitHub Issues](https://github.com/Cobrakiller456/-whitelist-manager/issues) page of this repository.
+For issues or questions, please open an issue on the [GitHub Issues](https://github.com/Cobrakiller456/-whitelist-manager/issues) page.
 
 ## License
 
-This plugin is licensed under the MIT License. See the [LICENSE]([LICENSE](https://github.com/Cobrakiller456/Whitelist-Manager/blob/main/LICENSE)https://github.com/Cobrakiller456/Whitelist-Manager/blob/main/LICENSE) file for details.
-
+Licensed under the MIT License. See the [LICENSE](https://github.com/Cobrakiller456/Whitelist-Manager/blob/main/LICENSE) file for details.
