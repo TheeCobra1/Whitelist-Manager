@@ -41,4 +41,4 @@ For issues or questions, please open an issue on the [GitHub Issues](https://git
 
 ## License
 
-Licensed under the MIT License. See the [LICENSE]((https://github.com/TheeCobra1/Whitelist-Manager/blob/main/LICENSE)) file for details.
+Licensed under the MIT License. See the [LICENSE](https://github.com/TheeCobra1/Whitelist-Manager/blob/main/LICENSE) file for details.
