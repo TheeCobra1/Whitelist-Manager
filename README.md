@@ -2,16 +2,16 @@
 
 ## Overview
 
-Welcome to the Whitelist Manager plugin! This tool enables easy management of a dynamic whitelist for your Rust server. Maintain exclusivity and security by controlling who can access your server.
+Welcome to the Whitelist Manager plugin! This tool provides efficient management of a dynamic whitelist for your Rust server. It ensures controlled access to your server, maintaining exclusivity and security.
 
 ## Features
 
-- **Dynamic Whitelisting:** Add and remove players from the whitelist effortlessly.
+- **Dynamic Whitelisting:** Easily add or remove players from the whitelist.
 - **Automatic Kicking:** Non-whitelisted players are automatically kicked upon joining.
-- **Whitelist Searching:** Search functionality to find players in the whitelist.
-- **Paginated Player Listing:** View all whitelisted players in a user-friendly paginated format.
-- **Permission Management:** Automatically grant or revoke `whitelistmanager.bypass` to whitelisted players.
-- **Enhanced User Messages:** Color-coded and clearer user messages for better interaction.
+- **Whitelist Searching:** Enhanced search functionality to locate players in the whitelist.
+- **Paginated Player Listing:** Displays all whitelisted players in a user-friendly, paginated format.
+- **Localized Messages:** Improved interaction with color-coded and localized user messages.
+- **Efficient Data Management:** Direct handling of data structures for optimized performance.
 
 ## Installation
 
@@ -28,17 +28,17 @@ Use these commands in chat (with a `/` prefix) or in the server console:
 - `/whitelist add <player>`: Add a player to the whitelist. Requires `whitelistmanager.admin`.
 - `/whitelist remove <player>`: Remove a player from the whitelist. Requires `whitelistmanager.admin`.
 - `/whitelist list [page]`: List all whitelisted players, with optional pagination.
-- `/whitelist search <player>`: Search for a player in the whitelist.
+- `/whitelist search <player>`: Search for a player in the whitelist by their full SteamID.
 
 ### Permissions
 
-- `whitelistmanager.admin`: Access to whitelist management commands.
-- `whitelistmanager.bypass`: Granted to whitelisted players to bypass restrictions.
+- `whitelistmanager.admin`: Grants access to whitelist management commands.
 
 ## Support and Issues
 
-For issues or questions, please open an issue on the [GitHub Issues](https://github.com/Cobrakiller456/-whitelist-manager/issues) page.
+For support, questions, or to report issues, please open an issue on the [GitHub Issues](https://github.com/Cobrakiller456/-whitelist-manager/issues) page.
 
 ## License
 
-Licensed under the MIT License. See the [LICENSE](https://github.com/TheeCobra1/Whitelist-Manager/blob/main/LICENSE) file for details.
+This plugin is licensed under the MIT License. For more details, see the [LICENSE](https://github.com/TheeCobra1/Whitelist-Manager/blob/main/LICENSE) file.
+
