@@ -1,23 +1,22 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using Oxide.Core;
 using Oxide.Core.Libraries.Covalence;
 
 namespace Oxide.Plugins
 {
-    [Info("Whitelist Manager", "Cobra", "2.0.2")]
+    [Info("Whitelist Manager", "Cobra", "2.0.4")]
     [Description("Manage a dynamic whitelist for your Rust server.")]
     class WhitelistManager : CovalencePlugin
     {
-        private HashSet<string> whitelist = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        private HashSet<string> whitelist = new HashSet<string>();
         private const int ItemsPerPage = 10;
+        private const string PermissionAdmin = "whitelistmanager.admin";
 
         void Init()
         {
-            permission.RegisterPermission("whitelistmanager.admin", this);
-            permission.RegisterPermission("whitelistmanager.bypass", this);
+            permission.RegisterPermission(PermissionAdmin, this);
             LoadWhitelistData();
         }
 
@@ -37,7 +36,7 @@ namespace Oxide.Plugins
         [Command("whitelist")]
         void CmdWhitelist(IPlayer player, string command, string[] args)
         {
-            if (!HasPermissionOrNotify(player, "whitelistmanager.admin"))
+            if (!HasPermissionOrNotify(player, PermissionAdmin))
                 return;
 
             if (args.Length == 0)
@@ -46,7 +45,7 @@ namespace Oxide.Plugins
                 return;
             }
 
-            var action = args[0].ToLower(CultureInfo.InvariantCulture);
+            var action = args[0].ToLower();
 
             switch (action)
             {
@@ -73,17 +72,17 @@ namespace Oxide.Plugins
             if (!HasValidArgumentsOrNotify(player, args, 2, GetMessage("UsageAdd", player)))
                 return;
 
-            var targetPlayer = args[1].ToLower(CultureInfo.InvariantCulture);
+            var targetPlayer = args[1].ToLower();
 
             if (whitelist.Contains(targetPlayer))
             {
-                player.Reply(GetMessage("AlreadyWhitelisted", player).Replace("{player}", targetPlayer, StringComparison.Ordinal));
+                player.Reply(GetMessage("AlreadyWhitelisted", player).Replace("{player}", targetPlayer));
                 return;
             }
 
             whitelist.Add(targetPlayer);
             SaveWhitelistData();
-            player.Reply(GetMessage("AddedToWhitelist", player).Replace("{player}", targetPlayer, StringComparison.Ordinal));
+            player.Reply(GetMessage("AddedToWhitelist", player).Replace("{player}", targetPlayer));
         }
 
         void RemovePlayerFromWhitelist(IPlayer player, string[] args)
@@ -91,17 +90,17 @@ namespace Oxide.Plugins
             if (!HasValidArgumentsOrNotify(player, args, 2, GetMessage("UsageRemove", player)))
                 return;
 
-            var playerToRemove = args[1].ToLower(CultureInfo.InvariantCulture);
+            var playerToRemove = args[1].ToLower();
 
             if (!whitelist.Contains(playerToRemove))
             {
-                player.Reply(GetMessage("PlayerNotFound", player).Replace("{player}", playerToRemove, StringComparison.Ordinal));
+                player.Reply(GetMessage("PlayerNotFound", player).Replace("{player}", playerToRemove));
                 return;
             }
 
             whitelist.Remove(playerToRemove);
             SaveWhitelistData();
-            player.Reply(GetMessage("RemovedFromWhitelist", player).Replace("{player}", playerToRemove, StringComparison.Ordinal));
+            player.Reply(GetMessage("RemovedFromWhitelist", player).Replace("{player}", playerToRemove));
         }
 
         void ListWhitelistedPlayers(IPlayer player, string[] args)
@@ -112,8 +111,12 @@ namespace Oxide.Plugins
             page = Math.Min(page, totalPages);
 
             var paginatedList = whitelist.Skip((page - 1) * ItemsPerPage).Take(ItemsPerPage);
-            var message = $"Whitelisted Players (Page {page} of {totalPages}):\n" + string.Join("\n", paginatedList);
+            var playerDetailsList = paginatedList.Select(pid => {
+                var pl = covalence.Players.FindPlayerById(pid);
+                return pl != null ? $"{pl.Name} ({pid})" : $"({pid})";
+            });
 
+            var message = GetMessage("ListWhitelisted", player).Replace("{players}", string.Join("\n", playerDetailsList));
             player.Reply(message);
         }
 
@@ -122,16 +125,22 @@ namespace Oxide.Plugins
             if (!HasValidArgumentsOrNotify(player, args, 2, GetMessage("UsageSearch", player)))
                 return;
 
-            string searchTerm = args[1].ToLower(CultureInfo.InvariantCulture);
-            var foundPlayers = whitelist.Where(id => id.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)).ToList();
+            string searchTerm = args[1].ToLower();
+            var foundPlayers = whitelist
+                .Where(id => id.ToLower().Contains(searchTerm))
+                .Select(pid => {
+                    var pl = covalence.Players.FindPlayerById(pid);
+                    return pl != null ? $"{pl.Name} ({pid})" : $"({pid})";
+                })
+                .ToList();
 
             if (foundPlayers.Any())
             {
-                player.Reply($"<color=green>Found players:</color> {string.Join(", ", foundPlayers)}");
+                player.Reply(GetMessage("FoundPlayers", player).Replace("{players}", string.Join(", ", foundPlayers)));
             }
             else
             {
-                player.Reply($"<color=yellow>No players found matching:</color> {searchTerm}");
+                player.Reply(GetMessage("NoPlayersFound", player).Replace("{searchTerm}", searchTerm));
             }
         }
 
@@ -156,15 +165,15 @@ namespace Oxide.Plugins
 
         void SaveWhitelistData()
         {
-            Interface.Oxide.DataFileSystem.WriteObject("WhitelistManager", whitelist.ToList());
+            Interface.Oxide.DataFileSystem.WriteObject("WhitelistManager", whitelist);
         }
 
         void LoadWhitelistData()
         {
-            var whitelistData = Interface.Oxide.DataFileSystem.ReadObject<List<string>>("WhitelistManager");
+            var whitelistData = Interface.Oxide.DataFileSystem.ReadObject<HashSet<string>>("WhitelistManager");
             if (whitelistData != null)
             {
-                whitelist = new HashSet<string>(whitelistData, StringComparer.OrdinalIgnoreCase);
+                whitelist = new HashSet<string>(whitelistData);
             }
         }
 
@@ -181,11 +190,13 @@ namespace Oxide.Plugins
                 ["RemovedFromWhitelist"] = "<color=green>Success:</color> {player} has been removed from the whitelist.",
                 ["NoPermission"] = "<color=yellow>Notice:</color> You do not have permission to use this command.",
                 ["PlayerNotFound"] = "<color=red>Error:</color> Player not found on the whitelist.",
-                ["ListWhitelisted"] = "Whitelisted players: {players}",
+                ["ListWhitelisted"] = "Whitelisted Players: {players}",
                 ["Usage"] = "<color=yellow>Usage:</color> /whitelist <add|remove|list|search>",
                 ["UsageAdd"] = "<color=yellow>Usage:</color> /whitelist add <player>",
                 ["UsageRemove"] = "<color=yellow>Usage:</color> /whitelist remove <player>",
-                ["UsageSearch"] = "<color=yellow>Usage:</color> /whitelist search <player>"
+                ["UsageSearch"] = "<color=yellow>Usage:</color> /whitelist search <player>",
+                ["FoundPlayers"] = "<color=green>Found players:</color> {players}",
+                ["NoPlayersFound"] = "<color=yellow>No players found matching:</color> {searchTerm}"
             }, this);
         }
     }
