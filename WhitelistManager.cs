@@ -1,35 +1,36 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Oxide.Core;
 using Oxide.Core.Libraries.Covalence;
 
 namespace Oxide.Plugins
 {
-    [Info("Whitelist Manager", "Cobra", "2.0.4")]
+    [Info("Whitelist Manager", "Cobra", "2.0.8")]
     [Description("Manage a dynamic whitelist for your Rust server.")]
     class WhitelistManager : CovalencePlugin
     {
-        private HashSet<string> whitelist = new HashSet<string>();
+        private HashSet<string> whitelist = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         private const int ItemsPerPage = 10;
         private const string PermissionAdmin = "whitelistmanager.admin";
 
         void Init()
         {
             permission.RegisterPermission(PermissionAdmin, this);
-            LoadWhitelistData();
+            TryLoadWhitelistData();
         }
 
-        bool IsWhitelisted(string playerId)
+        bool IsPlayerWhitelisted(string playerId)
         {
             return whitelist.Contains(playerId);
         }
 
         void OnUserConnected(IPlayer player)
         {
-            if (!IsWhitelisted(player.Id))
+            if (!IsPlayerWhitelisted(player.Id))
             {
-                player.Kick(GetMessage("NotWhitelisted", player));
+                player.Kick(GetLocalizedMessage("NotWhitelisted", player));
             }
         }
 
@@ -41,11 +42,11 @@ namespace Oxide.Plugins
 
             if (args.Length == 0)
             {
-                player.Reply(GetMessage("Usage", player));
+                player.Reply(GetLocalizedMessage("Usage", player));
                 return;
             }
 
-            var action = args[0].ToLower();
+            var action = args[0].ToLowerInvariant();
 
             switch (action)
             {
@@ -62,73 +63,75 @@ namespace Oxide.Plugins
                     SearchWhitelistedPlayers(player, args);
                     break;
                 default:
-                    player.Reply(GetMessage("Usage", player));
+                    player.Reply(GetLocalizedMessage("Usage", player));
                     break;
             }
         }
 
         void AddPlayerToWhitelist(IPlayer player, string[] args)
         {
-            if (!HasValidArgumentsOrNotify(player, args, 2, GetMessage("UsageAdd", player)))
+            if (!HasValidArgumentsOrNotify(player, args, 2, GetLocalizedMessage("UsageAdd", player)))
                 return;
 
-            var targetPlayer = args[1].ToLower();
+            var targetPlayer = args[1].ToLowerInvariant();
 
             if (whitelist.Contains(targetPlayer))
             {
-                player.Reply(GetMessage("AlreadyWhitelisted", player).Replace("{player}", targetPlayer));
+                player.Reply(GetLocalizedMessage("AlreadyWhitelisted", player).Replace("{player}", targetPlayer));
                 return;
             }
 
             whitelist.Add(targetPlayer);
             SaveWhitelistData();
-            player.Reply(GetMessage("AddedToWhitelist", player).Replace("{player}", targetPlayer));
+            player.Reply(GetLocalizedMessage("AddedToWhitelist", player).Replace("{player}", targetPlayer));
         }
 
         void RemovePlayerFromWhitelist(IPlayer player, string[] args)
         {
-            if (!HasValidArgumentsOrNotify(player, args, 2, GetMessage("UsageRemove", player)))
+            if (!HasValidArgumentsOrNotify(player, args, 2, GetLocalizedMessage("UsageRemove", player)))
                 return;
 
-            var playerToRemove = args[1].ToLower();
+            var playerToRemove = args[1].ToLowerInvariant();
 
             if (!whitelist.Contains(playerToRemove))
             {
-                player.Reply(GetMessage("PlayerNotFound", player).Replace("{player}", playerToRemove));
+                player.Reply(GetLocalizedMessage("PlayerNotFound", player).Replace("{player}", playerToRemove));
                 return;
             }
 
             whitelist.Remove(playerToRemove);
             SaveWhitelistData();
-            player.Reply(GetMessage("RemovedFromWhitelist", player).Replace("{player}", playerToRemove));
+            player.Reply(GetLocalizedMessage("RemovedFromWhitelist", player).Replace("{player}", playerToRemove));
         }
 
         void ListWhitelistedPlayers(IPlayer player, string[] args)
         {
             int page = args.Length > 1 && int.TryParse(args[1], out int pageNum) ? Math.Max(1, pageNum) : 1;
             int totalItems = whitelist.Count;
-            int totalPages = (int)Math.Ceiling(totalItems / (double)ItemsPerPage);
+            int totalPages = totalItems == 0 ? 1 : (int)Math.Ceiling(totalItems / (double)ItemsPerPage);
             page = Math.Min(page, totalPages);
 
             var paginatedList = whitelist.Skip((page - 1) * ItemsPerPage).Take(ItemsPerPage);
-            var playerDetailsList = paginatedList.Select(pid => {
+            var playerDetailsList = paginatedList.Select(pid =>
+            {
                 var pl = covalence.Players.FindPlayerById(pid);
                 return pl != null ? $"{pl.Name} ({pid})" : $"({pid})";
             });
 
-            var message = GetMessage("ListWhitelisted", player).Replace("{players}", string.Join("\n", playerDetailsList));
+            var message = GetLocalizedMessage("ListWhitelisted", player).Replace("{players}", string.Join("\n", playerDetailsList));
             player.Reply(message);
         }
 
         void SearchWhitelistedPlayers(IPlayer player, string[] args)
         {
-            if (!HasValidArgumentsOrNotify(player, args, 2, GetMessage("UsageSearch", player)))
+            if (!HasValidArgumentsOrNotify(player, args, 2, GetLocalizedMessage("UsageSearch", player)))
                 return;
 
-            string searchTerm = args[1].ToLower();
+            string searchTerm = args[1].ToLowerInvariant();
             var foundPlayers = whitelist
-                .Where(id => id.ToLower().Contains(searchTerm))
-                .Select(pid => {
+                .Where(id => id.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) >= 0)
+                .Select(pid =>
+                {
                     var pl = covalence.Players.FindPlayerById(pid);
                     return pl != null ? $"{pl.Name} ({pid})" : $"({pid})";
                 })
@@ -136,11 +139,13 @@ namespace Oxide.Plugins
 
             if (foundPlayers.Any())
             {
-                player.Reply(GetMessage("FoundPlayers", player).Replace("{players}", string.Join(", ", foundPlayers)));
+                player.Reply(GetLocalizedMessage("FoundPlayers", player)
+                .Replace("{players}", string.Join(", ", foundPlayers)));
             }
             else
             {
-                player.Reply(GetMessage("NoPlayersFound", player).Replace("{searchTerm}", searchTerm));
+                player.Reply(GetLocalizedMessage("NoPlayersFound", player)
+                .Replace("{searchTerm}", searchTerm));
             }
         }
 
@@ -149,7 +154,7 @@ namespace Oxide.Plugins
             if (player.HasPermission(permissionName))
                 return true;
 
-            player.Reply(GetMessage("NoPermission", player));
+            player.Reply(GetLocalizedMessage("NoPermission", player));
             return false;
         }
 
@@ -162,22 +167,56 @@ namespace Oxide.Plugins
             }
             return true;
         }
+void SaveWhitelistData()
+{
+    try
+    {
+        Interface.Oxide.DataFileSystem.WriteObject("WhitelistManager", whitelist);
+    }
+    catch (IOException ex)
+    {
+        PrintWarning($"I/O Error saving whitelist data: {ex.Message}");
+        throw; // Rethrowing the exception
+    }
+    catch (UnauthorizedAccessException ex)
+    {
+        PrintWarning($"Access Error saving whitelist data: {ex.Message}");
+        throw; // Rethrowing the exception
+    }
+    catch (Exception ex)
+    {
+        PrintWarning($"Unexpected Error saving whitelist data: {ex.Message}");
+        throw; // Rethrowing the exception
+    }
+}
 
-        void SaveWhitelistData()
+void TryLoadWhitelistData()
+{
+    try
+    {
+        var loadedWhitelist = Interface.Oxide.DataFileSystem.ReadObject<HashSet<string>>("WhitelistManager");
+        if (loadedWhitelist != null)
         {
-            Interface.Oxide.DataFileSystem.WriteObject("WhitelistManager", whitelist);
+            whitelist = new HashSet<string>(loadedWhitelist, StringComparer.OrdinalIgnoreCase);
         }
-
-        void LoadWhitelistData()
-        {
-            var whitelistData = Interface.Oxide.DataFileSystem.ReadObject<HashSet<string>>("WhitelistManager");
-            if (whitelistData != null)
-            {
-                whitelist = new HashSet<string>(whitelistData);
-            }
-        }
-
-        private string GetMessage(string key, IPlayer player = null) =>
+    }
+    catch (IOException ex)
+    {
+        PrintWarning($"I/O Error loading whitelist data: {ex.Message}");
+        throw; // Rethrowing the exception
+    }
+    catch (UnauthorizedAccessException ex)
+    {
+        PrintWarning($"Access Error loading whitelist data: {ex.Message}");
+        throw; // Rethrowing the exception
+    }
+    catch (Exception ex)
+    {
+        PrintWarning($"Unexpected Error loading whitelist data: {ex.Message}");
+        throw; // Rethrowing the exception
+    }
+}
+        private string GetLocalizedMessage(string key, IPlayer player = null) =>
             lang.GetMessage(key, this, player?.Id);
 
         protected override void LoadDefaultMessages()
