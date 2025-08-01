@@ -10,8 +10,11 @@ Welcome to the Whitelist Manager plugin! This tool provides efficient management
 - **Automatic Kicking:** Non-whitelisted players are automatically kicked upon joining.
 - **Whitelist Searching:** Enhanced search functionality to locate players in the whitelist.
 - **Paginated Player Listing:** Displays all whitelisted players in a user-friendly, paginated format.
-- **Localized Messages:** Improved interaction with color-coded and localized user messages.
-- **Efficient Data Management:** Direct handling of data structures for optimized performance.
+- **Bulk Operations:** Clear entire whitelist with a single command.
+- **Whitelist Statistics:** Quick count of total whitelisted players.
+- **Hot Reload:** Reload whitelist from disk without restarting the plugin.
+- **Improved Performance:** Optimized data structures and error handling.
+- **Localized Messages:** Color-coded and localized user messages for better interaction.
 
 ## Installation
 
@@ -28,7 +31,10 @@ Use these commands in chat (with a `/` prefix) or in the server console:
 - `/whitelist add <player>`: Add a player to the whitelist. Requires `whitelistmanager.admin`.
 - `/whitelist remove <player>`: Remove a player from the whitelist. Requires `whitelistmanager.admin`.
 - `/whitelist list [page]`: List all whitelisted players, with optional pagination.
-- `/whitelist search <player>`: Search for a player in the whitelist by their full SteamID.
+- `/whitelist search <term>`: Search for players in the whitelist by partial SteamID match.
+- `/whitelist clear`: Clear all players from the whitelist. Requires `whitelistmanager.admin`.
+- `/whitelist count`: Display the total number of whitelisted players.
+- `/whitelist reload`: Reload the whitelist from disk. Requires `whitelistmanager.admin`.
 
 ### Permissions
 
@@ -41,4 +47,3 @@ For support, questions, or to report issues, please open an issue on the [GitHub
 ## License
 
 This plugin is licensed under the MIT License. For more details, see the [LICENSE](https://github.com/TheeCobra1/Whitelist-Manager/blob/main/LICENSE) file.
-
